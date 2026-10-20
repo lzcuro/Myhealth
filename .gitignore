@@ -15,6 +15,7 @@ venv/
 data/*
 !data/catalog/
 !data/catalog/**
+docs/paper/
 
 # 가중치
 models/

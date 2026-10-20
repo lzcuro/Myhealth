@@ -1,0 +1,46 @@
+# 섭취 상한. Python·Kotlin이 함께 읽는다.
+# 기준: 식단 코칭 에이전트 개발자 명세서 v1.0 §8.2
+# 결정: docs/decisions/2026-10-15-spec-over-proposal.md
+# 수치는 식약처 안내의 참조값이며, 개인 의학적 조언이 아니다.
+# 대상군이 프로필로 확인될 때만 해당 id를 연결한다. 미상 대상군은 판정하지 않는다.
+
+schema_version: "0.2.0"
+updated: "2026-10-15"
+spec_section: "8.2"
+
+limits:
+  - id: MFDS_ADULT_CAFFEINE_LIMIT
+    substance: caffeine
+    population: adult
+    window: day
+    metric: total_mg
+    value: 400
+    unit: mg
+    source: "식품의약품안전처. 고카페인 함유 문구 및 일일 최대섭취권고량 안내"
+    source_version: "https://www.mfds.go.kr/brd/m_227/view.do?seq=27563"
+    applies_when: "profile.population == adult"
+    notes: "성인 하루 400 mg 이하. 임신·어린이·청소년·미상 프로필에는 연결하지 않는다."
+
+  - id: MFDS_PREGNANCY_CAFFEINE_LIMIT
+    substance: caffeine
+    population: pregnancy
+    window: day
+    metric: total_mg
+    value: 300
+    unit: mg
+    source: "식품의약품안전처. 고카페인 함유 문구 및 일일 최대섭취권고량 안내"
+    source_version: "https://www.mfds.go.kr/brd/m_227/view.do?seq=27563"
+    applies_when: "profile.population == pregnancy"
+    notes: "임산부 하루 300 mg 이하. 명세서 8.2."
+
+  - id: MFDS_CHILD_ADOLESCENT_CAFFEINE_LIMIT
+    substance: caffeine
+    population: child_adolescent
+    window: day
+    metric: mg_per_kg
+    value: 2.5
+    unit: mg/kg
+    source: "식품의약품안전처. 고카페인 함유 문구 및 일일 최대섭취권고량 안내"
+    source_version: "https://www.mfds.go.kr/brd/m_227/view.do?seq=27563"
+    applies_when: "profile.population == child_adolescent and profile.body_weight_kg is not null"
+    notes: "어린이·청소년 체중 kg당 하루 2.5 mg 이하. 체중이 없으면 이 한도를 적용하지 않는다."

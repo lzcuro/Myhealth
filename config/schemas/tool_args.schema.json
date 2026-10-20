@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://baymax.local/schemas/tool_args.schema.json",
+  "title": "ToolArgs",
+  "description": "에이전트가 도구에 넘기는 인자. docs/specs가 확정되기 전에는 검증 게이트로 쓰지 않는다.",
+  "type": "object",
+  "additionalProperties": true,
+  "properties": {
+    "schema_version": {
+      "const": "tool_args_v1"
+    },
+    "tool": {
+      "type": "string",
+      "minLength": 1
+    },
+    "arguments": {
+      "type": "object"
+    }
+  },
+  "required": ["schema_version", "tool", "arguments"]
+}

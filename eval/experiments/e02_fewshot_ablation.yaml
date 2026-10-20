@@ -1,0 +1,13 @@
+id: e02_fewshot_ablation
+description: few-shot 개수만 바꾸고 모델·프롬프트·백엔드는 e01과 같게 둔다
+prompt_version: null
+fewshot_values: [0, 1, 3]
+base_experiment: e01_baseline
+models: []
+backends: []
+eval_sets:
+  - eval_a
+  - eval_b
+notes: >
+  few-shot 예시는 src/baymax/agent/prompts/ 의 버전 파일을 참조한다.
+  모델별 출력 형식 차이는 adapters/에서만 흡수한다.

@@ -1,0 +1,13 @@
+id: e01_baseline
+description: 기본 프롬프트, few-shot 없음
+prompt_version: null
+fewshot: 0
+models: []
+backends: []
+eval_sets:
+  - eval_a
+  - eval_b
+notes: >
+  모델 카드(config/models)와 프롬프트 버전이 정해진 뒤 models, backends,
+  prompt_version을 채운다. 결과 디렉터리 이름은
+  eval/runs/<YYYYMMDD>_<model>_<backend>_<prompt>_<fs수>/ 이다.

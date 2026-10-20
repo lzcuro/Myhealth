@@ -1,0 +1,46 @@
+# Insight Rules. 식단 코칭 에이전트 개발자 명세서 v1.0 §8.
+# Analysis JSON이 만들어진 다음에만 실행한다.
+# 규칙 엔진은 합계를 바꾸거나 새 영양 수치를 추정하지 않는다.
+# 임계 숫자는 consumption_limits.yaml 의 id로 참조한다.
+# 결정: docs/decisions/2026-10-15-spec-over-proposal.md
+
+schema_version: "0.2.0"
+updated: "2026-10-15"
+spec_section: "8"
+
+rules:
+  - id: CAFFEINE_OVER_LIMIT_DAY
+    when: "해당 날짜의 카페인 판정이 확정 초과"
+    limit_id: "프로필 대상군에 연결된 consumption_limits id"
+    result: "날짜별 초과 이벤트, 초과량의 하한, limit source"
+    safety: >
+      known_subtotal이 limit을 넘으면 unknown 항목이 있어도 초과는 확정한다.
+      unknown이 있으면 total_status는 incomplete이고, 총량과 초과량은 하한으로만 말한다.
+      완전한 총량일 때만 초과량을 확정값으로 말한다.
+
+  - id: CAFFEINE_REPEAT_PATTERN
+    when: "기간 내 confirmed over-limit day >= repeat_min_days"
+    repeat_min_days: 2
+    result: "반복일 수, 날짜 목록, 연속 초과일"
+    safety: "반복 플래그이며 질병이나 위험 진단으로 표현하지 않는다."
+
+  - id: CAFFEINE_DATA_INCOMPLETE
+    when: "stimulant item unknown이 하루 이상"
+    result: "coverage 경고"
+    safety: "미초과로 단정하지 않는다. decision_status는 partially_assessable일 수 있다."
+
+  - id: NUTRIENT_BELOW_TARGET
+    when: "관찰 평균이 설정된 목표 미만이고 최소 coverage를 충족"
+    result: "부족 관찰과 목표 대비 차이"
+    safety: "목표가 null이면 실행하지 않는다."
+
+  - id: MEAL_DISTRIBUTION_PATTERN
+    when: null
+    result: "끼니 분포 관찰"
+    safety: "단일 주이거나 기록이 불완전하면 관찰된 기록 기준이라고 말한다."
+    notes: "명세서 8은 미리 정의한 조건을 요구하지만 수치 조건은 아직 없다. 조건을 정하기 전에는 이 규칙을 실행하지 않는다."
+
+  - id: MACRO_SHARE_AVAILABLE
+    when: "단백질·탄수화물·지방 입력이 있고 에너지 분모 > 0"
+    result: "에너지 비율 계산 가능"
+    safety: "영양소가 빠지거나 단위 변환이 불가하면 계산을 생략한다. 누락을 0으로 바꾸지 않는다."

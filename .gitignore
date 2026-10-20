@@ -1,2 +1,35 @@
-data/ 
-paper/
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Notebooks
+.ipynb_checkpoints/
+
+# 건강 데이터. catalog만 커밋한다.
+data/*
+!data/catalog/
+!data/catalog/**
+docs/paper/
+
+# 가중치
+models/
+
+# 다른 경로에 두어도 DB·가중치는 커밋하지 않는다.
+*.sqlite
+*.sqlite3
+*.gguf
+
+# 평가 run: 원문 출력은 로컬. manifest.json, scores.json은 커밋할 수 있다.
+eval/runs/*/predictions.jsonl
+
+# 기기 실측 원본
+device/results/raw/
+
+# OS / editor
+.DS_Store

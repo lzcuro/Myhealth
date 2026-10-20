@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://baymax.local/schemas/analysis_v1.schema.json",
+  "title": "AnalysisV1",
+  "description": "식단 스킬이 만드는 분석 JSON. tests/golden과 eval/eval_b/fixtures가 이 계약을 따른다. 필드 확정 전 초안이며, 지금은 검증 게이트로 쓰지 않는다.",
+  "type": "object",
+  "additionalProperties": true,
+  "properties": {
+    "schema_version": {
+      "const": "analysis_v1"
+    }
+  },
+  "required": ["schema_version"]
+}

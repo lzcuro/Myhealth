@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://baymax.local/schemas/coaching_draft.schema.json",
+  "title": "CoachingDraft",
+  "description": "모델이 만든 코칭 초안. grounding/validate_evidence를 통과하기 전 상태다. 필드 확정 전 초안이며, 지금은 검증 게이트로 쓰지 않는다.",
+  "type": "object",
+  "additionalProperties": true,
+  "properties": {
+    "schema_version": {
+      "const": "coaching_draft_v1"
+    }
+  },
+  "required": ["schema_version"]
+}

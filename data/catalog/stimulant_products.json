@@ -1,0 +1,11 @@
+{
+  "catalog_version": "0.2.0",
+  "updated": "2026-10-15",
+  "spec_section": "6.2",
+  "decision": "docs/decisions/2026-10-15-spec-over-proposal.md",
+  "match_policy": "exact_match_only",
+  "unmatched": "unknown",
+  "alias_policy": "catalog_aliases_only",
+  "description": "각성 성분 제품 카탈로그. 브랜드+제품명+용량이 일치할 때만 verified다. 등록된 aliases만 별칭으로 쓴다. 범주 평균이나 근사치로 함량을 채우지 않는다.",
+  "products": []
+}

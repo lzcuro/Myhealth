@@ -1,0 +1,58 @@
+삼성 헬스에서 최근 7일 수면·식단을 읽어 data/raw 로 가져오는 요구사항
+대상: 이 저장소를 노트북에서 다시 맞출 때. 확인된 절차는 Windows PC와 Galaxy S25(SM-S931N, Android 16) 기준이다.
+
+1. 저장소
+- https://github.com/lzcuro/Myhealth.git 의 dev 브랜치를 사용한다.
+- 읽을 앱 소스는 android/samsung-health-data-sdk-1.1.0/HealthDiary 다.
+- SDK 라이브러리는 android/samsung-health-data-sdk-1.1.0/1.1.0/libs/samsung-health-data-api-1.1.0.aar 와 HealthDiary/app/libs/samsung-health-data-1.1.0.aar 에 있다.
+- 읽어 온 JSON은 data/raw/samsung-health-week.json 에 둔다. data/* 는 catalog 외에는 Git에 올리지 않는다. data/raw/samsung_health/ 의 내보내기 원본은 수정하지 않는다.
+
+2. PC 소프트웨어
+- JDK 17. 빌드 중 JAVA_HOME 은 JDK 17 경로여야 한다. JDK 16이 JAVA_HOME 에 남아 있으면 Gradle이 그 버전을 쓴다.
+- Android SDK
+  - command line tools: https://dl.google.com/android/repository/commandlinetools-win-13114758_latest.zip
+  - 설치 위치 예: %LOCALAPPDATA%\Android\Sdk\cmdline-tools\latest
+  - 패키지: platforms;android-34 , build-tools;34.0.0
+  - sdkmanager --licenses 로 라이선스를 수락한다.
+- HealthDiary/local.properties 에 이 PC의 SDK 경로를 적는다. 이 파일은 커밋하지 않는다.
+    sdk.dir=C:/Users/<계정>/AppData/Local/Android/Sdk
+- Android platform-tools (adb). Windows용 최신 zip:
+  https://dl.google.com/android/repository/platform-tools-latest-windows.zip
+  압축을 푼 뒤의 adb.exe 를 사용한다. device/platform-tools/ 는 이 PC에만 두고 커밋하지 않는다.
+- Health Diary는 Java 17, compileSdk 34, minSdk 29, Gradle 8.1.1, Android Gradle Plugin 8.0.2 로 빌드한다.
+
+3. 휴대폰
+- 삼성 헬스 6.30.2 이상. 이 PC에 연결된 S25는 7.1.0.053 이었다.
+- 개발자 옵션에서 USB 디버깅을 켠다.
+- PC에 연결한 뒤 "USB 디버깅을 허용"에서 이 컴퓨터를 항상 허용한다. adb devices 가 unauthorized 가 아니라 device 여야 한다.
+- 삼성 헬스 > 설정 > 삼성 헬스 정보에서 버전 줄을 10번 이상 눌러 Developer mode (Samsung Health Data SDK)를 연다.
+- Developer mode for Data Read 를 켠다. 이 모드는 테스트용이며, 읽기 권한은 앱 패키지마다 따로 받는다. DataViewer에서 허용해도 Health Diary에는 다시 동의 화면이 나올 수 있다.
+- 화면 잠금이 풀려 있어야 권한 창을 누를 수 있다.
+
+4. 빌드와 설치
+- HealthDiary 디렉터리에서:
+    set JAVA_HOME=C:\Program Files\Java\jdk-17
+    gradlew.bat assembleDebug
+- 결과 APK:
+    app\build\outputs\apk\debug\Health Diary-Debug1.1.0.apk
+- 설치와 실행. 패키지 이름은 com.samsung.android.health.sdk.sample.healthdiary 다.
+    adb install -r "app\build\outputs\apk\debug\Health Diary-Debug1.1.0.apk"
+    adb shell am start -n com.samsung.android.health.sdk.sample.healthdiary/.activity.ExportWeekActivity
+- 수면(SLEEP)과 식단(NUTRITION) 읽기 허용이 뜨면 허용한다.
+- 디버그 빌드이므로 run-as 로 앱 내부 파일을 꺼낼 수 있다.
+
+5. PC로 복사
+- 앱은 최근 7일(실행 시각 기준 now.minusDays(7) ~ now)을 읽어 앱 내부 파일 files/samsung-health-week.json 과 files/status.txt 에 쓴다.
+- 상태 확인:
+    adb exec-out run-as com.samsung.android.health.sdk.sample.healthdiary cat files/status.txt
+  성공하면 OK sleep=<건수> nutrition=<건수> 이다. NO_PERMISSION 이면 휴대폰에서 읽기 동의가 끝나지 않은 것이다.
+- JSON 저장:
+    adb exec-out run-as com.samsung.android.health.sdk.sample.healthdiary cat files/samsung-health-week.json > data\raw\samsung-health-week.json
+- JSON 최상위 필드는 start, end, sleep, nutrition 이다.
+  수면 항목: 시작·종료 시각, duration, sleepScore, sessions(단계 포함)
+  식단 항목: 끼니, 음식명, 칼로리와 영양소, 출처 appId·deviceId
+
+6. 이 절차로 되지 않는 것
+- USB로 붙었다는 것만으로 PC가 삼성 헬스 DB를 읽지는 못한다. DataViewer와 Health Diary 본래 화면은 휴대폰에 보여 주기만 한다.
+- PC로 파일을 만드는 경로는 ExportWeekActivity 이다.
+- 에뮬레이터에서는 Samsung Health Data SDK가 동작하지 않는다.

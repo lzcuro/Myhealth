@@ -62,8 +62,9 @@
 │   ├── runs/                      # 아래 이름 규칙. predictions.jsonl만 gitignore
 │   └── reports/leaderboard.md
 │
-├── device/                        # S25 실측
+├── device/                        # S25 실측, 삼성 헬스 읽기 요구사항
 │   ├── scripts/
+│   ├── samsung-health-read-requirements.txt
 │   └── results/                   # raw/ 는 gitignore
 │
 ├── tests/
@@ -72,7 +73,10 @@
 │
 ├── scripts/                       # run_etl.py, run_eval.py 등 CLI
 ├── notebooks/
-└── android/                       # 6주차부터
+└── android/
+    └── samsung-health-data-sdk-1.1.0/
+        ├── 1.1.0/                 # Samsung Health Data SDK 1.1.0
+        └── HealthDiary/          # 수면·식단을 JSON으로 저장하는 시험 앱
 ```
 
 빈 디렉터리는 `.gitkeep`으로 자리를 잡아 두었다. `src/baymax` 아래 Python 모듈은 구현할 때 만든다. `data/db/health.sqlite`와 `eval/runs/<...>/`도 실행 결과로 생긴다.
@@ -106,6 +110,8 @@
 
 원본 내보내기는 수정하지 않는다. 고칠 값이 있으면 `interim/`이나 DB로 옮긴 뒤 고친다.
 
+SDK로 시험 삼아 읽은 최근 7일 파일은 `data/raw/samsung-health-week.json`이다. 내보내기 원본 폴더와 따로 두며, 역시 Git에는 올리지 않는다.
+
 ### 가중치 — `models/`
 
 GGUF 등 가중치 파일 전용이다. 커밋하지 않는다. 어떤 파일인지, 해시는 무엇인지는 `config/models/*.yaml`과 평가 run의 `manifest.json`에 적는다.
@@ -134,7 +140,7 @@ GGUF 등 가중치 파일 전용이다. 커밋하지 않는다. 어떤 파일인
 
 ### 기기 — `device/`
 
-Galaxy S25에서 지연시간, 피크 메모리, 배터리를 재는 스크립트와 결과다. `results/raw/`는 커밋하지 않는다.
+Galaxy S25에서 지연시간, 피크 메모리, 배터리를 재는 스크립트와 결과다. `results/raw/`는 커밋하지 않는다. 노트북에서 삼성 헬스 읽기를 다시 맞출 때 필요한 PC·휴대폰 조건은 `samsung-health-read-requirements.txt`에 있다.
 
 ### 테스트 — `tests/`
 
@@ -145,8 +151,24 @@ Galaxy S25에서 지연시간, 피크 메모리, 배터리를 재는 스크립�
 
 - `scripts/`: `run_etl.py`, `run_eval.py` 같은 CLI 진입점.
 - `notebooks/`: 탐색용. 여기 있는 계산을 제품 경로의 기준으로 쓰지 않고, 확정되면 `src/`와 `config/`로 옮긴다.
-- `android/`: 온디바이스 앱. 6주차부터 구현한다.
+- `android/`: 온디바이스 제품 앱은 6주차부터 구현한다. 그 전에 들어 있는 `HealthDiary`는 삼성 샘플을 고친 읽기 시험용이다.
+
+## 삼성 헬스에서 최근 7일 수면·식단 읽기
+
+삼성 헬스 데이터 SDK는 휴대폰 안의 앱이 삼성 헬스 저장소를 읽는 라이브러리다. PC에 USB로 연결되었다고 해서 PC가 헬스 DB를 직접 조회하지는 못한다. DataViewer(`1.1.0/tool/DataViewer_1.1.0.apk`)와 Health Diary의 원래 화면은 기록을 휴대폰에 보여 주기만 한다. PC 파일로 남기는 경로는 `HealthDiary`에 추가한 `ExportWeekActivity`다.
+
+노트북에서 같은 순서를 밟을 때의 설치 목록과 명령은 `device/samsung-health-read-requirements.txt`에 모아 두었다. 아래는 그 절차가 하는 일이다.
+
+1. 휴대폰에서 USB 디버깅을 켜고, PC의 RSA 키를 허용한다. `adb devices`에 일련번호와 `device`가 보여야 한다. `unauthorized`이면 아직 허용 전이다.
+2. 삼성 헬스 6.30.2 이상에서 개발자 모드를 연다. 설정 > 삼성 헬스 정보에서 버전 줄을 10번 이상 누르면 Developer mode (Samsung Health Data SDK)가 생긴다. 읽기 시험에는 Developer mode for Data Read를 켠다.
+3. PC에는 JDK 17, Android SDK 34(platform `android-34`, build-tools `34.0.0`), platform-tools의 `adb`가 필요하다. `JAVA_HOME`은 JDK 17을 가리켜야 한다. SDK 경로는 `HealthDiary/local.properties`의 `sdk.dir`에만 적고 커밋하지 않는다. Windows용 `adb`를 받아 둔 `device/platform-tools/`도 커밋하지 않는다.
+4. `android/samsung-health-data-sdk-1.1.0/HealthDiary`에서 `gradlew.bat assembleDebug`로 디버그 APK를 만든다. 결과 파일 이름은 `Health Diary-Debug1.1.0.apk`다.
+5. `adb install -r`로 설치하고 `ExportWeekActivity`를 실행한다. 패키지 이름은 `com.samsung.android.health.sdk.sample.healthdiary`다. 수면과 식단 읽기 동의는 이 패키지에 대해 따로 받는다. DataViewer에서 이미 허용했어도 이 앱에는 다시 뜰 수 있다.
+6. 액티비티는 실행 시각 기준 최근 7일(`now.minusDays(7)`부터 `now`까지)을 읽는다. 수면은 `DataTypes.SLEEP`, 식단은 `DataTypes.NUTRITION`이다. 수면 기록에는 세션과 수면 단계를 포함하고, 식단 기록에는 끼니, 음식명, 칼로리, 영양소, 출처 앱·기기를 포함한다.
+7. 앱은 결과를 자신의 내부 저장소 `files/samsung-health-week.json`에 쓴다. 디버그 빌드라 `adb exec-out run-as <패키지> cat files/samsung-health-week.json`으로 PC의 `data/raw/samsung-health-week.json`에 저장한다. `files/status.txt`가 `OK sleep=<건수> nutrition=<건수>`이면 읽기가 끝난 것이다. `NO_PERMISSION`이면 휴대폰에서 동의가 끝나지 않은 것이다.
+
+이 PC에서 한 시험 읽기의 구간은 2026-10-19 13:29부터 2026-10-26 13:29까지였고, 수면 7건, 식단 37건이었다. 그 JSON은 `data/raw/`에만 둔다.
 
 ## 로컬에서 무시되는 것
 
-`.gitignore`는 `data/*`를 무시하고 `data/catalog/`만 다시 포함한다. `models/`, `eval/runs/*/predictions.jsonl`, `device/results/raw/`도 무시한다. `*.sqlite`, `*.gguf`는 경로가 바뀌어도 커밋되지 않는다.
+`.gitignore`는 `data/*`를 무시하고 `data/catalog/`만 다시 포함한다. `models/`, `eval/runs/*/predictions.jsonl`, `device/results/raw/`, `device/platform-tools/`도 무시한다. `*.sqlite`, `*.gguf`는 경로가 바뀌어도 커밋되지 않는다. Android의 `.gradle/`과 `local.properties`도 커밋하지 않는다.

@@ -31,5 +31,12 @@ eval/runs/*/predictions.jsonl
 # 기기 실측 원본
 device/results/raw/
 
+# Windows용 ADB. PC마다 받고, 저장소에는 넣지 않는다.
+device/platform-tools/
+
+# Android 로컬 빌드와 이 PC의 SDK 경로
+.gradle/
+local.properties
+
 # OS / editor
 .DS_Store
